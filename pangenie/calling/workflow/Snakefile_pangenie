@@ -1,0 +1,94 @@
+# snakemake --cores 1 --snakefile Snakefile_truth all --use-singularity
+
+import os
+
+GRAPH = config['graph_name']
+VCF_PREPROCESSING_IDS = config['vcf_preprocessing_ids']
+VCF_PREPROCESSING_IDS_BIALLELIC = config['vcf_preprocessing_ids_biallelic']
+FASTA_FILE = config['fasta']
+FASTQ_FILES = config["fastq_files"]
+
+# correct genotypes on sex chromosomes (human)
+rule all:
+    input:
+        vcf=expand("results_{graph}/{graph}_pangenie_calling_genotyping.biallelic.vcf.gz", graph=GRAPH)
+
+rule pangenie_index:
+    input:
+        vcf=VCF_PREPROCESSING_IDS,
+        fa=FASTA_FILE,
+    output: "results_{graph}/{graph}_pangenie_indexed.tsv",
+    benchmark:
+        "benchmarks/{graph}_pangenie_index_benchmark.txt"
+    params:
+        prefix_output="results_{graph}/{graph}_pangenie_indexed"
+    log:
+        "logs/{graph}_pangenie_index.log"
+    threads: 8
+    shell:
+        """
+        touch {output}
+        PanGenie-index -v {input.vcf} -r {input.fa} -t {threads} -o {params.prefix_output} > {log} 2>&1
+        """
+
+rule pangenie_genotyping:
+    input:
+        index="results_{graph}/{graph}_pangenie_indexed.tsv",
+        reads=FASTQ_FILES,
+    output:"results_{graph}/{graph}_pangenie_genotyping.tsv",
+    benchmark:
+        "benchmarks/{graph}_pangenie_genotyping_benchmark.txt"
+    threads: 16
+    params:
+        prefix_input="results_{graph}/{graph}_pangenie_indexed",
+        prefix_output="results_{graph}/{graph}_pangenie",
+    log:
+        "logs/{graph}_pangenie_genotyping.log"
+    shell:
+        """
+        touch {output}
+        PanGenie -f {params.prefix_input} -i <(gunzip -c {input.reads}) -s HG002_HiSeq30x_subsampled -j {threads} -t {threads} -w -x 0 -o {params.prefix_output} > {log} 2>&1
+        """
+
+rule pangenie_calling:
+    input:
+        index="results_{graph}/{graph}_pangenie_indexed.tsv",
+        genotype="results_{graph}/{graph}_pangenie_genotyping.tsv",
+    output:"results_{graph}/{graph}_pangenie_calling_genotyping.vcf",
+    benchmark:
+        "benchmarks/{graph}_pangenie_calling_benchmark.txt"
+    params:
+        prefix_index="results_{graph}/{graph}_pangenie_indexed",
+        prefix_genotype="results_{graph}/{graph}_pangenie",
+        prefix_output="results_{graph}/{graph}_pangenie_calling"
+    log:
+        "logs/{graph}_pangenie_calling.log"
+    threads: 1
+    shell:
+        """
+        PanGenie-vcf -f {params.prefix_index} -z {params.prefix_genotype}_genotyping.cereal -s HG002_HiSeq30x_subsampled -o {params.prefix_output} > {log} 2>&1
+        """
+
+rule pangenie_biallelic_calling:
+    input: 
+        calling="results_{graph}/{graph}_pangenie_calling_genotyping.vcf",
+        filtered_ids_biallelic=VCF_PREPROCESSING_IDS_BIALLELIC,
+        script="workflow/scripts/convert-to-biallelic.py"
+    output:"results_{graph}/{graph}_pangenie_calling_genotyping.biallelic.vcf",
+    threads: 1
+    log:
+        "logs/{graph}_pangenie_biallelic_calling.log"
+    shell:
+        """
+        cat {input.calling} | python3 {input.script} {input.filtered_ids_biallelic} > {output}
+        """
+
+rule gz_index:
+    input:"results_{graph}/{graph}_pangenie_calling_genotyping.biallelic.vcf",
+    output:"results_{graph}/{graph}_pangenie_calling_genotyping.biallelic.vcf.gz",
+    threads: 1
+    shell:
+        """
+        bgzip -f {input}
+        bcftools index {output}
+        """

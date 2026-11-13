@@ -1,0 +1,16 @@
+# Pangenie Pipeline
+
+[**PanGenie**](https://github.com/eblerjana/pangenie) is a pangenome graph mapper/caller, here we use it in a snakemake workflow as : `pangenie`.
+
+1. **Preprocessing**
+
+   * Filters and annotates input VCFs.
+   * Removes missing or ambiguous alleles.
+   * Corrects genotypes on sex chromosomes.
+   * Generates both multi-allelic and biallelic VCFs.
+
+2. **Calling**
+
+   * Indexes graph and variant data using `PanGenie-index`.
+   * Performs short-read genotyping with `PanGenie`.
+   * Produces VCFs containing final genotype calls and biallelic versions for benchmarking.

@@ -1,0 +1,123 @@
+---
+title: "Benchmark Report: SV Genotyping in the HPRC Pangenome (-x 15 vs -x 0)"
+output: html_document
+params:
+  benchmark_dir:
+    value: "benchmarks"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# Load packages
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(stringr)
+library(knitr)
+
+# Helper function
+sec_to_h <- function(x) x / 3600
+
+# Benchmark directory from params
+benchmark_dir <- params$benchmark_dir
+```
+
+## Objective
+
+This report compares the runtime and memory usage of the **pangenie** SV genotyping pipeline with two different `-x` options:
+
+* `-x 15` (higher parallelism)
+* `-x 0` (single-threaded/default)
+
+We analyze three pipeline steps:
+
+1. **Indexing**
+2. **Calling**
+3. **Genotyping**
+
+## Data Loading and Preprocessing
+
+```{r load-benchmarks}
+# List benchmark files
+benchmark_files <- list.files(
+  benchmark_dir,
+  full.names = TRUE,
+  pattern = "_benchmark_x[0-9]+\\.txt$"
+)
+
+# Read and process all files
+bench_list <- lapply(benchmark_files, function(f) {
+  df <- read_tsv(f, col_types = cols())
+  
+  # Convert CPU time to hours
+  df$time_h <- sec_to_h(df$cpu_time)
+  
+  # Extract graph_name, step, replicate from filename
+  fname <- basename(f)
+  m <- str_match(
+    fname,
+    "^(.*)_pangenie_(index|calling|genotyping)_benchmark_(x[0-9]+)\\.txt$"
+  )
+  
+  df$graph_name <- m[,2]
+  df$step <- m[,3]
+  df$replicate <- m[,4]
+  
+  df
+})
+
+# Combine into one dataframe
+bench_df <- bind_rows(bench_list)
+
+# Aggregate replicates
+bench_summary <- bench_df %>%
+  group_by(graph_name, step, replicate) %>%
+  summarise(
+    time_h = mean(time_h, na.rm = TRUE),
+    max_rss = mean(max_rss, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Factor ordering
+bench_summary$step <- factor(bench_summary$step, levels = c("index", "calling", "genotyping"))
+bench_summary$graph_name <- factor(bench_summary$graph_name, levels = unique(bench_summary$graph_name))
+```
+
+## Benchmark Plots
+
+### Runtime per Step
+
+```{r plot-runtime, echo=FALSE}
+p_time <- ggplot(bench_summary, aes(x = step, y = time_h, fill = replicate)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+  facet_wrap(~graph_name, scales = "free_y") +
+  labs(
+    y = "Time (Hours)",
+    x = "Pipeline Step",
+    title = "Pangenie Benchmark: Runtime per Step and Graph",
+    fill = "X option"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(p_time)
+```
+
+### Memory Usage per Step
+
+```{r plot-memory, echo=FALSE}
+p_mem <- ggplot(bench_summary, aes(x = step, y = max_rss, fill = replicate)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+  facet_wrap(~graph_name, scales = "free_y") +
+  labs(
+    y = "Max RSS (MB)",
+    x = "Pipeline Step",
+    title = "Pangenie Benchmark: Memory Usage per Step",
+    fill = "X option"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(p_mem)
+```

@@ -1,0 +1,13 @@
+{
+  "Giraffe.INPUT_READ_FILE_1": "tests/small_sim_graph/reads_1.fastq.gz",
+  "Giraffe.INPUT_READ_FILE_2": "tests/small_sim_graph/reads_2.fastq.gz",
+  "Giraffe.GBZ_FILE": "tests/small_sim_graph/graph.gbz",
+  "Giraffe.IN_HAPL_FILE": "tests/small_sim_graph/graph.hapl",
+  "Giraffe.PATH_LIST_FILE": "tests/small_sim_graph/paths.txt",
+  "Giraffe.SAMPLE_NAME": "s0",
+  "Giraffe.OUTPUT_GAF": true,
+  "Giraffe.MAP_MEM": 8,
+  "Giraffe.MAP_CORES": 6,
+  "Giraffe.vg_call.minlen": 1,
+  "Giraffe.HaplotypeSampling.kmerCountingKMC.max_ram": 8
+}

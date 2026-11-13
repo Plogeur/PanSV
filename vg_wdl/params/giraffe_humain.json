@@ -1,0 +1,11 @@
+{
+  "Giraffe.INPUT_READ_FILE_1": "../data/HG002_HiSeq30x_subsampled_R1.fastq.gz",
+  "Giraffe.INPUT_READ_FILE_2": "../data/HG002_HiSeq30x_subsampled_R2.fastq.gz",
+  "Giraffe.GBZ_FILE": "../data/hprc-v1.1-mc-grch38.gbz",
+  "Giraffe.IN_HAPL_FILE": "../data/hprc-v1.1-mc-grch38.hapl",
+  "Giraffe.PATH_LIST_FILE" : "../data/hprc-v1.1-mc-grch38.paths_list.txt",
+  "Giraffe.READS_PER_CHUNK" : 20000000000,
+  "Giraffe.SAMPLE_NAME": "HG002",
+  "Giraffe.MAP_CORES": 32,
+  "Giraffe.OUTPUT_GAF": true
+}

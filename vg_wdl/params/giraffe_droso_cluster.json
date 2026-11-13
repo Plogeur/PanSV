@@ -1,0 +1,10 @@
+{
+  "Giraffe.INPUT_READ_FILE_1": "/work/user/malias/droso_data/OUTPUT_TMP/SRR933580_1.fastq.gz",
+  "Giraffe.INPUT_READ_FILE_2": "/work/user/malias/droso_data/OUTPUT_TMP/SRR933580_2.fastq.gz",
+  "Giraffe.GBZ_FILE": "/work/user/malias/droso_data/16-fly-pg-2023-08-25.gbz",
+  "Giraffe.IN_HAPL_FILE": "/work/user/malias/droso_data/16-fly-pg-2023-08-25.hapl",
+  "Giraffe.PATH_LIST_FILE": "/work/user/malias/droso_data/dm6.paths.txt",
+  "Giraffe.SAMPLE_NAME": "SRR933580",
+  "Giraffe.OUTPUT_GAF": true,
+  "Giraffe.vg_call.minlen": 1
+}

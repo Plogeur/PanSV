@@ -1,0 +1,35 @@
+configfile: "config/config.yaml"
+
+# snakemake --cores 4 --snakefile workflow/Snakefile_disk_opt_slurm genotype_variants_from_short_reads --configfile config/config.yaml -p -n
+
+import os
+
+DICT_SAMPLE_RUNS = {}
+SAMPLES = []
+RUNS_FASTQ = {}
+
+with open(config['sample_run']) as f:
+    next(f)
+    for line in f:
+        sample, run = line.strip().split('\t')
+        DICT_SAMPLE_RUNS[sample] = run.split(',')
+        SAMPLES.append(sample)
+
+with open(config['run_tsv']) as f:
+    next(f)
+    for line in f:
+        fields = line.rstrip('\n').split('\t')
+        run = fields[0]
+        fastq1 = fields[1]
+        fastq2 = fields[2] if len(fields) > 2 and fields[2] else None
+        RUNS_FASTQ[run] = (fastq1, fastq2)
+
+include: "rules/common.smk"
+include: "rules/index.smk"
+include: "rules/align.smk"
+include: "rules/call.smk"
+include: "rules/preprocessing.smk"
+
+rule all:
+    input:
+        expand('results/sample/{sample}.{graph}.gt.minlen{minlen}.vcf.gz', graph=config['graph'], sample=SAMPLES, minlen=config['gt_min_var_len'])
