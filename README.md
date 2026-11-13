@@ -1,6 +1,6 @@
 # PanSV
 
-The **PanSV** directory focuses on benchmarking and testing various pipelines and tools used for **genotyping human samples** in the context of **structural variant (SV) discovery** and **GWAS** related to **hemochromatosis** in the *UK Biobank ANR* project.
+The **PanSV** directory focuses on creating, benchmarking and testing various pipelines and tools used for **genotyping human samples** in the context of **structural variant (SV) discovery** and **GWAS** related to **hemochromatosis** in the *UK Biobank ANR* project.
 
 ## Contents
 
